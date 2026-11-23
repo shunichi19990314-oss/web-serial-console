@@ -1,0 +1,10 @@
+{
+  "name": "Web Serial Console",
+  "short_name": "SerialConsole",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#00e5ff",
+  "description": "No-install serial terminal in your browser",
+  "icons": [{ "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}
