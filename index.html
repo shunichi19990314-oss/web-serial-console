@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark light" />
+  <meta name="description" content="No-install serial terminal in your browser. Web Serial API, hex/ASCII views, macros, CSV/JSON export, built-in simulator. EN/JA." />
+  <title>Web Serial Console</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand">
+        <svg class="logo" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <path fill="currentColor" d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm0 3v13h10V5H7zm5 14.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/>
+          <path fill="var(--accent)" d="M9 7.5l4.5 3.5L9 14.5z" opacity=".9"/>
+        </svg>
+        <h1>Web Serial Console</h1>
+      </div>
+      <div class="connect-group">
+        <label class="field">
+          <span class="lbl" data-i18n="baud">Baud</span>
+          <select id="baud">
+            <option>1200</option><option>2400</option><option>4800</option>
+            <option>9600</option><option>19200</option><option>38400</option>
+            <option>57600</option><option selected>115200</option><option>230400</option>
+            <option>460800</option><option>921600</option>
+          </select>
+        </label>
+        <button id="btn-connect" class="primary" data-i18n="connect">🔌 Connect device</button>
+        <button id="btn-reconnect" class="hidden" data-i18n="reconnect">↻ Reconnect</button>
+        <button id="btn-sim" data-i18n="simulator">▶ Simulator</button>
+        <button id="btn-disconnect" class="danger hidden" data-i18n="disconnect">⏹ Disconnect</button>
+        <button id="btn-lang" class="ghost" title="Language / 言語">🌐</button>
+        <button id="btn-theme" class="ghost" title="Theme / テーマ">🌓</button>
+      </div>
+    </header>
+
+    <div id="support-banner" class="banner hidden" data-i18n-html="supportBanner"></div>
+    <div id="info-banner" class="banner info hidden"></div>
+
+    <div class="toolbar">
+      <label class="field">
+        <span class="lbl" data-i18n="view">View</span>
+        <select id="view">
+          <option value="text" selected data-i18n-opt="viewText">Text</option>
+          <option value="hexdump" data-i18n-opt="viewHex">Hex dump</option>
+        </select>
+      </label>
+      <label class="check"><input type="checkbox" id="ts" checked /><span data-i18n="timestamps">Timestamps</span></label>
+      <label class="check"><input type="checkbox" id="autoscroll" checked /><span data-i18n="autoscroll">Auto-scroll</span></label>
+      <input type="search" id="filter" data-i18n-ph="filterPh" placeholder="Filter lines…" />
+      <button id="btn-clear" class="ghost" data-i18n="clear">Clear</button>
+      <select id="export" class="export">
+        <option value="" data-i18n-opt="export">⬇ Export</option>
+        <option value="txt">.txt</option>
+        <option value="csv">.csv</option>
+        <option value="json">.json</option>
+      </select>
+      <span class="spacer"></span>
+      <span id="rates" class="rates" title="RX / TX bytes per second">⬇ 0 B/s ⬆ 0 B/s</span>
+    </div>
+
+    <div id="macros-bar" class="macros">
+      <button id="btn-add-macro" class="ghost small" data-i18n="addMacro">＋ Macro</button>
+      <span id="macro-list" class="macro-list"></span>
+    </div>
+
+    <main id="terminal" class="terminal" aria-live="polite"></main>
+
+    <div class="txbar">
+      <input type="text" id="tx-input" data-i18n-ph="txPh" placeholder="Type a line to send…" autocomplete="off" spellcheck="false" />
+      <label class="field slim">
+        <select id="ending" title="Line ending">
+          <option value="\r\n" selected>CRLF</option>
+          <option value="\n">LF</option>
+          <option value="\r">CR</option>
+          <option value="">None</option>
+        </select>
+      </label>
+      <label class="check"><input type="checkbox" id="hex-tx" /><span data-i18n="hexMode">Hex</span></label>
+      <button id="btn-send" class="primary" data-i18n="send">Send</button>
+    </div>
+
+    <footer id="status" class="statusbar">
+      <span class="dot" id="st-dot"></span>
+      <span id="st-state" data-i18n="stateClosed">Closed</span>
+      <span class="sep">·</span>
+      <span id="st-port">—</span>
+      <span class="sep">·</span>
+      <span id="st-signals">CTS – DSR – CD –</span>
+      <span class="spacer"></span>
+      <span id="st-counters">⬇ 0 B ⬆ 0 B</span>
+      <span class="sep">·</span>
+      <span id="st-time">00:00</span>
+    </footer>
+  </div>
+  <dialog id="macro-dialog">
+    <form method="dialog" id="macro-form">
+      <h3 data-i18n="macroTitle">Macro</h3>
+      <label><span data-i18n="macroName">Name</span><input id="macro-name" required maxlength="24" /></label>
+      <label><span data-i18n="macroData">Data</span><input id="macro-data" required placeholder="LED ON / 01 A7 FF" /></label>
+      <label class="check"><input type="checkbox" id="macro-hex" /><span data-i18n="hexMode">Hex</span></label>
+      <menu>
+        <button id="macro-delete" class="danger" type="button" data-i18n="delete">Delete</button>
+        <span class="spacer"></span>
+        <button class="ghost" type="submit" value="cancel" data-i18n="cancel">Cancel</button>
+        <button class="primary" type="submit" value="ok" data-i18n="save">Save</button>
+      </menu>
+    </form>
+  </dialog>
+  <script type="module" src="./src/main.ts"></script>
+</body>
+</html>
