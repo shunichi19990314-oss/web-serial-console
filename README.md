@@ -88,7 +88,7 @@ void loop()  { Serial.println(millis() / 1000); delay(1000); }
 
 ## Related
 
-From the same author: [OpenSCQ30 Web](https://github.com/shunichi19990314-oss/openscq30-web) — control Soundcore earbuds from the browser over the same Web Serial + RFCOMM stack.
+Also from this account: [OpenSCQ30 Web](https://github.com/shunichi19990314-oss/openscq30-web) — control Soundcore earbuds from the browser over the same Web Serial + RFCOMM stack.
 
 Built on the [Web Serial API](https://wicg.github.io/serial/) · Vanilla TypeScript + Vite · MIT License
 
